@@ -44,6 +44,8 @@ git clone https://github.com/Zhalslar/astrbot_plugin_human_service
 
 ### 示例图
 
+![c4c33c6e4ea7687165880e0c55eacd2](https://github.com/user-attachments/assets/4024faae-3932-4c63-9ceb-b72f785fbb03)
+
 ## 👥 贡献指南
 
 - 🌟 Star 这个项目！（点右上角的星星，感谢支持！）
