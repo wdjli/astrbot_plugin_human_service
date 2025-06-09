@@ -41,11 +41,9 @@ class HumanServicePlugin(Star):
             "group_id": group_id,
         }
 
-        reply = f"用户 {send_name}({sender_id}) 请求转人工\n请发送 {self.prefix}接入对话 {sender_id}"
+        reply = f"用户🗣{send_name}({sender_id}) 请求转人工\n请发送 {self.prefix}接入对话 {sender_id}"
         await self.send(event, message=reply, user_id=self.admin_id)
-        yield event.plain_result(
-            f"🕓 您已请求转人工，请等待管理员接入\n如需取消请发送 {self.prefix}取消等待"
-        )
+        yield event.plain_result("正在等待客服👤转接...")
 
     @filter.command("取消等待", priority=1)
     async def cancel_wait(self, event: AiocqhttpMessageEvent):
@@ -102,7 +100,7 @@ class HumanServicePlugin(Star):
             session["status"] = "paused"
             await self.send(
                 event,
-                message=f"⚠ 管理员已暂停对话，请稍候\n取消等待发送 {self.prefix}结束对话",
+                message="⚠ 管理员👤暂停了对话",
                 group_id=session["group_id"],
                 user_id=target_id,
             )
@@ -123,7 +121,7 @@ class HumanServicePlugin(Star):
             session["status"] = "connected"
             await self.send(
                 event,
-                message="🔔 管理员已恢复对话，请继续",
+                message="🔔 管理员👤已恢复对话，请继续",
                 group_id=session["group_id"],
                 user_id=target_id,
             )
@@ -159,7 +157,7 @@ class HumanServicePlugin(Star):
                 if sess["admin"] == sender_id:
                     await self.send(
                         event,
-                        message="🔔 管理员已结束对话",
+                        message="🔔 管理员👤已结束对话",
                         group_id=sess["group_id"],
                         user_id=uid,
                     )
@@ -198,7 +196,7 @@ class HumanServicePlugin(Star):
                 ):
                     await self.send(
                         event,
-                        message=f"👤 管理员：{message_str}",
+                        message=f"👤：{message_str}",
                         group_id=session["group_id"],
                         user_id=user_id,
                     )
@@ -210,7 +208,6 @@ class HumanServicePlugin(Star):
             if session and session["status"] == "connected":
                 await self.send(
                     event,
-                    message=f"🗣 用户 {sender_id}：{message_str}",
+                    message=f"🗣：{sender_id}：{message_str}",
                     user_id=self.admin_id,
                 )
-
