@@ -83,11 +83,11 @@ class HumanServicePlugin(Star):
             user_id=target_id,
         )
         yield event.plain_result(
-            f"☑ 已接入用户 {target_id} 的对话\n"
-            f"{self.prefix}对话 xxx \n"
+            f"☑ 已接入, 接下来我将会把你的消息转发给对方\n"
             f"{self.prefix}暂停对话 {target_id} \n"
             f"{self.prefix}结束对话"
         )
+        event.stop_event()
 
     @filter.command("暂停对话", priority=1)
     async def pause_conversation(self, event: AiocqhttpMessageEvent):
