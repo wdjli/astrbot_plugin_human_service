@@ -17,9 +17,16 @@ class HumanServicePlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
         # 管理员 QQ
-        self.admin_id = context.get_config()["admins_id"][0]
+        self.admin_id: str = config.get("admin_id", "")
+        if not self.admin_id:
+            for admin_id in context.get_config()["admins_id"]:
+                if admin_id.isdigit():
+                    self.admin_id = admin_id
+                    break
         # 用于存储会话信息的字典
         self.session_map = {}
+        # 唤醒前缀
+        self.prefix: list[str] = context.get_config()["wake_prefix"]
 
     @filter.command("转人工")
     async def transfer_to_human(self, event: AiocqhttpMessageEvent):
@@ -29,12 +36,10 @@ class HumanServicePlugin(Star):
             yield event.plain_result("⚠ 您已经在等待接入或正在对话中")
             return
         self.session_map[sender_id] = {"admin": self.admin_id, "status": "waiting"}
-        reply = (
-            f"用户 {send_name}({sender_id}) 请求转人工\n请发送 #接入对话 {sender_id}"
-        )
-        await event.bot.send_private_msg(user_id=self.admin_id, message=reply)
+        reply = f"用户 {send_name}({sender_id}) 请求转人工\n请发送 {self.prefix}接入对话 {sender_id}"
+        await event.bot.send_private_msg(user_id=int(self.admin_id), message=reply)
         yield event.plain_result(
-            "🕓 您已请求转人工，请等待管理员接入\n如需取消请发送 #取消等待"
+            f"🕓 您已请求转人工，请等待管理员接入\n如需取消请发送 {self.prefix}取消等待"
         )
 
     @filter.command("取消等待")
@@ -46,7 +51,7 @@ class HumanServicePlugin(Star):
         ):
             del self.session_map[sender_id]
             reply = f"❗ 用户 {sender_id} 已取消人工请求"
-            await event.bot.send_private_msg(user_id=self.admin_id, message=reply)
+            await event.bot.send_private_msg(user_id=int(self.admin_id), message=reply)
             yield event.plain_result("🆗 您已取消人工请求")
         else:
             yield event.plain_result("❎ 您当前没有待接入的人工请求")
@@ -66,10 +71,10 @@ class HumanServicePlugin(Star):
         self.session_map[target_id]["status"] = "connected"
         yield event.bot.send_private_msg(
             user_id=target_id,
-            message="☑ 管理员已接入，您现在可以开始对话了\n如需结束请发送 #结束对话",
+            message=f"☑ 管理员已接入，您现在可以开始对话了\n如需结束请发送 {self.prefix}结束对话",
         )
         yield event.plain_result(
-            f"☑ 已接入用户 {target_id} 的对话\n暂停请发送 #暂停对话 {target_id} \n结束请发 #结束对话"
+            f"☑ 已接入用户 {target_id} 的对话\n暂停请发送 {self.prefix}暂停对话 {target_id} \n结束请发 {self.prefix}结束对话"
         )
 
     @filter.command("暂停对话")
@@ -87,7 +92,7 @@ class HumanServicePlugin(Star):
             session["status"] = "paused"
             yield event.bot.send_private_msg(
                 user_id=target_id,
-                message="⚠ 管理员已暂停对话，请稍候\n取消等待发送 #结束对话",
+                message=f"⚠ 管理员已暂停对话，请稍候\n取消等待发送 {self.prefix}结束对话",
             )
             yield event.plain_result(f"✅ 已暂停与用户 {target_id} 的对话")
         else:
@@ -118,14 +123,15 @@ class HumanServicePlugin(Star):
             if session["status"] == "waiting":
                 del self.session_map[sender_id]
                 yield event.bot.send_private_msg(
-                    user_id=self.admin_id,
+                    user_id=int(self.admin_id),
                     message=f"🔔 用户 {sender_id} 已取消转人工请求（通过结束命令）",
                 )
                 yield event.plain_result("🆗 您已取消转人工请求")
             elif session["status"] in ["connected", "paused"]:
                 del self.session_map[sender_id]
                 yield event.bot.send_private_msg(
-                    user_id=self.admin_id, message=f"🔔 用户 {sender_id} 已结束对话"
+                    user_id=int(self.admin_id),
+                    message=f"🔔 用户 {sender_id} 已结束对话",
                 )
                 yield event.plain_result("🆗 您已结束对话")
         else:
