@@ -10,7 +10,7 @@ from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import (
     "astrbot_plugin_human_service",
     "Zhalslar",
     "人工客服插件",
-    "1.0.0",
+    "1.0.1",
     "https://github.com/Zhalslar/astrbot_plugin_human_service",
 )
 class HumanServicePlugin(Star):
@@ -45,21 +45,21 @@ class HumanServicePlugin(Star):
         await self.send(event, message=reply, user_id=self.admin_id)
         yield event.plain_result("正在等待客服👤转接...")
 
-    @filter.command("取消等待", priority=1)
+    @filter.command("转人机", priority=1)
     async def cancel_wait(self, event: AiocqhttpMessageEvent):
         sender_id = event.get_sender_id()
+        sender_name = event.get_sender_name()
         session = self.session_map.get(sender_id)
 
-        if session and session["status"] == "waiting":
+        if session and session["status"] == "connected":
             del self.session_map[sender_id]
             await self.send(
                 event,
-                message=f"❗ 用户 {sender_id} 已取消人工请求",
+                message=f"❗{sender_name} 已取消人工请求",
                 user_id=self.admin_id,
             )
-            yield event.plain_result("🆗 您已取消人工请求")
-        else:
-            yield event.plain_result("❎ 您当前没有待接入的人工请求")
+            yield event.plain_result("好的，我现在是人机啦！")
+
 
     @filter.command("接入对话", priority=1)
     async def accept_conversation(self, event: AiocqhttpMessageEvent):
@@ -72,15 +72,21 @@ class HumanServicePlugin(Star):
             yield event.plain_result("❎ 用户不存在或未请求人工")
             return
 
+        if session["status"] == "connected":
+            yield event.plain_result("❎ 您正在与该用户对话")
+
         session["status"] = "connected"
         await self.send(
             event,
-            message=f"☑ 管理员已接入，您现在可以开始对话了\n如需结束请发送 {self.prefix}结束对话",
+            message="管理员👤已接入",
             group_id=session["group_id"],
             user_id=target_id,
         )
         yield event.plain_result(
-            f"☑ 已接入用户 {target_id} 的对话\n暂停请发送 {self.prefix}暂停对话 {target_id} \n结束请发 {self.prefix}结束对话"
+            f"☑ 已接入用户 {target_id} 的对话\n"
+            f"{self.prefix}对话 xxx \n"
+            f"{self.prefix}暂停对话 {target_id} \n"
+            f"{self.prefix}结束对话"
         )
 
     @filter.command("暂停对话", priority=1)
@@ -134,12 +140,13 @@ class HumanServicePlugin(Star):
         sender_id = event.get_sender_id()
         session = self.session_map.get(sender_id)
 
+        # 用户主动结束会话
         if session:
             if session["status"] == "waiting":
                 del self.session_map[sender_id]
                 await self.send(
                     event,
-                    message=f"🔔 用户 {sender_id} 已取消转人工请求（通过结束命令）",
+                    message=f"🔔 用户 {sender_id} 已取消转人工请求",
                     user_id=self.admin_id,
                 )
                 yield event.plain_result("🆗 您已取消转人工请求")
@@ -152,6 +159,7 @@ class HumanServicePlugin(Star):
                 )
                 del self.session_map[sender_id]
                 yield event.plain_result("🆗 您已结束对话")
+        # 管理员主动结束会话
         else:
             for uid, sess in self.session_map.items():
                 if sess["admin"] == sender_id:
@@ -184,10 +192,9 @@ class HumanServicePlugin(Star):
     async def handle_match(self, event: AiocqhttpMessageEvent):
         """监听对话消息转发"""
         message_str = event.get_message_str()
-        sender_id = event.get_sender_id()
 
         # 管理员 → 用户
-        if str(sender_id) == self.admin_id:
+        if event.is_private_chat() and event.is_admin():
             # 查找管理员当前接入的用户
             for user_id, session in self.session_map.items():
                 if (
@@ -200,14 +207,16 @@ class HumanServicePlugin(Star):
                         group_id=session["group_id"],
                         user_id=user_id,
                     )
+                    event.stop_event()
                     break
 
         # 用户 → 管理员
         else:
-            session = self.session_map.get(sender_id)
+            session = self.session_map.get(event.get_sender_id())
             if session and session["status"] == "connected":
                 await self.send(
                     event,
-                    message=f"🗣：{sender_id}：{message_str}",
+                    message=f"🗣：{message_str}",
                     user_id=self.admin_id,
                 )
+                event.stop_event()
