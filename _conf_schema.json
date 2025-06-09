@@ -1,7 +1,7 @@
 {
-    "admin_id": {
+    "servicers_id": {
         "description": "客服QQ",
-        "type": "string",
-        "hint": "默认从全局配置中加载管理员作为客服"
+        "type": "list",
+        "hint": "若不填则默认从全局配置中加载管理员作为客服"
     }
 }
