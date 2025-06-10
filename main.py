@@ -95,7 +95,7 @@ class HumanServicePlugin(Star):
 
         await self.send(
             event,
-            message="管理员👤已接入",
+            message="客服👤已接入",
             group_id=session["group_id"],
             user_id=target_id,
         )
