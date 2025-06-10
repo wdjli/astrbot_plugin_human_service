@@ -141,6 +141,8 @@ class HumanServicePlugin(Star):
         """监听对话消息转发"""
         sender_id = event.get_sender_id()
         message_str = event.get_message_str()
+        if not message_str:
+            return
 
         # 管理员 → 用户 (仅私聊生效)
         if event.is_private_chat():
