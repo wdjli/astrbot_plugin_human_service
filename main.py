@@ -3,6 +3,7 @@ from astrbot.api.event import filter
 from astrbot.api.star import Context, Star, register
 from astrbot.core.config.astrbot_config import AstrBotConfig
 from astrbot.core.message.components import Reply
+from astrbot.core.message.message_event_result import MessageChain
 from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import (
     AiocqhttpMessageEvent,
 )
@@ -12,7 +13,7 @@ from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import (
     "astrbot_plugin_human_service",
     "Zhalslar",
     "人工客服插件",
-    "1.0.3",
+    "1.0.4",
     "https://github.com/Zhalslar/astrbot_plugin_human_service",
 )
 class HumanServicePlugin(Star):
@@ -25,7 +26,6 @@ class HumanServicePlugin(Star):
                     self.servicers_id.append(admin_id)
 
         self.session_map = {}
-        self.prefix: list[str] = context.get_config()["wake_prefix"][0]
 
     @filter.command("转人工", priority=1)
     async def transfer_to_human(self, event: AiocqhttpMessageEvent):
@@ -49,7 +49,6 @@ class HumanServicePlugin(Star):
                 message=f"{send_name}({sender_id}) 请求转人工",
                 user_id=servicer_id,
             )
-
 
     @filter.command("转人机", priority=1)
     async def transfer_to_bot(self, event: AiocqhttpMessageEvent):
@@ -102,7 +101,6 @@ class HumanServicePlugin(Star):
         yield event.plain_result("好的，接下来我将转发你的消息给对方，请开始对话：")
         event.stop_event()
 
-
     @filter.command("结束对话")
     async def end_conversation(self, event: AiocqhttpMessageEvent):
         sender_id = event.get_sender_id()
@@ -136,26 +134,41 @@ class HumanServicePlugin(Star):
         elif user_id:
             await event.bot.send_private_msg(user_id=int(user_id), message=message)
 
+    async def send_ob(
+        self,
+        event: AiocqhttpMessageEvent,
+        group_id: int | str | None = None,
+        user_id: int | str | None = None,
+    ):
+        """向用户发onebot格式的消息，兼容群聊或私聊"""
+        ob_message = await event._parse_onebot_json(
+            MessageChain(chain=event.message_obj.message)
+        )
+        if group_id and str(group_id) != "0":
+            await event.bot.send_group_msg(group_id=int(group_id), message=ob_message)
+        elif user_id:
+            await event.bot.send_private_msg(user_id=int(user_id), message=ob_message)
+
     @filter.event_message_type(filter.EventMessageType.ALL)
     async def handle_match(self, event: AiocqhttpMessageEvent):
         """监听对话消息转发"""
-        sender_id = event.get_sender_id()
-        message_str = event.get_message_str()
-        if not message_str:
+        chain = event.get_messages()
+        if not chain or any(isinstance(seg, (Reply)) for seg in chain):
             return
-
+        sender_id = event.get_sender_id()
         # 管理员 → 用户 (仅私聊生效)
-        if event.is_private_chat():
-            if message_str == "接入对话" or message_str == "结束对话":
-                return
+        if (
+            sender_id in self.servicers_id
+            and event.is_private_chat()
+            and event.message_str not in ("接入对话", "结束对话")
+        ):
             for user_id, session in self.session_map.items():
                 if (
                     session["servicer_id"] == sender_id
                     and session["status"] == "connected"
                 ):
-                    await self.send(
+                    await self.send_ob(
                         event,
-                        message=f"👤：{message_str}",
                         group_id=session["group_id"],
                         user_id=user_id,
                     )
@@ -163,12 +176,10 @@ class HumanServicePlugin(Star):
                     break
 
         # 用户 → 管理员
-        else:
-            session = self.session_map.get(sender_id)
-            if session and session["status"] == "connected":
-                await self.send(
+        elif session := self.session_map.get(sender_id):
+            if session["status"] == "connected":
+                await self.send_ob(
                     event,
-                    message=f"🗣：{message_str}",
                     user_id=session["servicer_id"],
                 )
                 event.stop_event()
