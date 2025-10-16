@@ -1,7 +1,19 @@
 {
     "servicers_id": {
-        "description": "客服QQ",
+        "description": "客服QQ号列表",
         "type": "list",
-        "hint": "若不填则默认从全局配置中加载管理员作为客服"
+        "hint": "填写客服的QQ号，例如：[\"123456789\", \"987654321\"]。若不填则默认从全局配置中加载管理员作为客服"
+    },
+    "enable_servicer_selection": {
+        "description": "启用客服选择功能",
+        "type": "bool",
+        "default": true,
+        "hint": "当有多个客服时，是否让用户选择对接哪个客服"
+    },
+    "enable_chat_history": {
+        "description": "启用聊天记录功能",
+        "type": "bool",
+        "default": false,
+        "hint": "开启后，客服可以使用 /导出记录 命令导出当前会话的聊天记录"
     }
 }
