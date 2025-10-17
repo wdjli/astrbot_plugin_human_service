@@ -103,8 +103,9 @@ class CommandHandler:
         available_servicers = selection.get("available_servicers", self.plugin.servicers_id)
         
         if not (1 <= choice <= len(available_servicers)):
-            await event.plain_result(f"⚠ 无效的选择，请输入 1-{len(available_servicers)} 或 0 取消")
-            return False, True
+            # event.plain_result 不是async方法，不能await
+            # 这个错误应该由调用者处理
+            return False, True, None
         
         # 选择了有效的客服
         selected_servicer_id = available_servicers[choice - 1]
@@ -113,14 +114,21 @@ class CommandHandler:
         # 删除选择状态
         del self.plugin.session_manager.selection_map[sender_id]
         
-        return await self._handle_selected_servicer(
+        success, should_stop, message, is_busy = await self._handle_selected_servicer(
             event, sender_id, selection, 
             selected_servicer_id, selected_servicer_name, choice
         )
+        
+        # 返回结果和消息
+        return success, should_stop, message
     
     async def _handle_selected_servicer(self, event, sender_id: str, selection: Dict,
                                         selected_servicer_id: str, selected_servicer_name: str, choice: int):
-        """处理已选择的客服"""
+        """处理已选择的客服
+        
+        Returns:
+            tuple: (success, should_stop, message, is_busy)
+        """
         # 检查客服是否忙碌
         if self.plugin.is_servicer_busy(selected_servicer_id):
             # 客服忙碌，加入队列
@@ -128,19 +136,21 @@ class CommandHandler:
             position = self.plugin.get_queue_position(selected_servicer_id, sender_id)
             queue_count = self.plugin.queue_manager.get_size(selected_servicer_id)
             
-            await event.plain_result(
-                f"客服【{selected_servicer_name}】正在服务中🔴\n"
-                f"您已加入等待队列，当前排队人数：{queue_count}\n"
-                f"您的位置：第 {position} 位\n\n"
-                f"💡 使用 /取消排队 可退出队列"
-            )
-            
             # 通知客服有人排队
             await self.plugin.send(
                 event,
                 message=f"📋 {selection['name']}({sender_id}) 已加入排队（指定您），当前队列：{queue_count} 人",
                 user_id=selected_servicer_id,
             )
+            
+            # 返回消息让调用者yield
+            message = (
+                f"客服【{selected_servicer_name}】正在服务中🔴\n"
+                f"您已加入等待队列，当前排队人数：{queue_count}\n"
+                f"您的位置：第 {position} 位\n\n"
+                f"💡 使用 /取消排队 可退出队列"
+            )
+            return True, True, message, True
         else:
             # 客服空闲，创建会话
             self.plugin.session_manager.create_session(sender_id, {
@@ -150,15 +160,16 @@ class CommandHandler:
                 "selected_servicer": selected_servicer_id
             })
             
-            # 通知用户和客服
-            await event.plain_result(f"正在等待客服【{selected_servicer_name}】接入...")
+            # 通知客服
             await self.plugin.send(
                 event,
                 message=f"{selection['name']}({sender_id}) 请求转人工（指定您）",
                 user_id=selected_servicer_id,
             )
-        
-        return True, True
+            
+            # 返回消息让调用者yield
+            message = f"正在等待客服【{selected_servicer_name}】接入..."
+            return True, True, message, False
     
     async def prepare_next_user_from_queue(self, event, servicer_id: str, context_message: str = ""):
         """

@@ -33,7 +33,8 @@ class BlacklistFormatter:
                 user_info = await event.bot.get_stranger_info(user_id=int(user_id))
                 nickname = user_info.get("nickname", user_id)
                 blacklist_text += f"{idx}. {nickname} ({user_id})\n"
-            except:
+            except Exception:
+                # 获取用户信息失败，只显示QQ号
                 blacklist_text += f"{idx}. {user_id}\n"
         
         blacklist_text += f"\n共 {len(blacklist)} 个用户"

@@ -908,9 +908,17 @@ class HumanServicePlugin(Star):
                 return
             
             # 使用CommandHandler处理选择
-            success, should_stop = await self.command_handler.handle_servicer_selection(
+            success, should_stop, message = await self.command_handler.handle_servicer_selection(
                 event, sender_id, choice, selection
             )
+            
+            if not success:
+                # 处理失败（无效选择）
+                available_servicers = selection.get("available_servicers", self.servicers_id)
+                yield event.plain_result(f"⚠ 无效的选择，请输入 1-{len(available_servicers)} 或 0 取消")
+            elif message:
+                # 处理成功，显示消息
+                yield event.plain_result(message)
             
             if should_stop:
                 event.stop_event()

@@ -3,6 +3,7 @@
 负责处理消息转发和路由逻辑
 """
 from datetime import datetime
+from .blacklist_formatter import BlacklistFormatter
 
 
 class MessageRouter:
@@ -56,7 +57,6 @@ class MessageRouter:
             return
         
         # 使用BlacklistFormatter格式化
-        from .blacklist_formatter import BlacklistFormatter
         blacklist_text = await BlacklistFormatter.format_blacklist(
             blacklist, event, f"📋 客服【{selected_servicer_name}】的黑名单"
         )
