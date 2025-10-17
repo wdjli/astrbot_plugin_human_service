@@ -21,6 +21,12 @@
         "default": false,
         "hint": "开启后，客服可以使用 /导出记录 命令导出当前会话的聊天记录"
     },
+    "enable_silence_mode": {
+        "description": "启用活动沉默模式",
+        "type": "bool",
+        "default": false,
+        "hint": "开启后，机器人的AI对话和其他插件功能将全部停止，仅保留人工客服插件功能。适用于纯人工客服场景"
+    },
     "share_blacklist": {
         "description": "共用黑名单",
         "type": "bool",

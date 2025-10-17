@@ -18,9 +18,22 @@ _✨ [astrbot](https://github.com/AstrBotDevs/AstrBot) 人工客服插件 ✨_
 
 让bot转人工\转人机，管理员接入对话\结束对话
 
-## ✨ 新功能特性（v1.7.0）
+## ✨ 新功能特性（v1.7.2）
 
-### 🌍 智能翻译系统
+### 🔇 活动沉默模式
+- **独占模式**：开启后，机器人的AI对话和其他插件功能将全部停止
+- **仅保留人工客服**：只有人工客服插件的命令可以使用
+- **适用场景**：
+  - 纯人工客服场景
+  - 维护期间只开放人工服务
+  - 防止AI和人工客服冲突
+- **智能判断**：
+  - 允许所有人工客服命令
+  - 允许正在对话的用户消息
+  - 允许客服的所有消息
+  - 阻止其他所有消息传播到AI或其他插件
+
+### 🌍 智能翻译系统（v1.7.0）
 - **AI翻译**：基于OpenAI API的智能翻译，支持中英日三语
 - **双向翻译**：自动翻译客服和用户之间的消息
 - **原文+译文**：同时发送原文和翻译，确保信息准确
@@ -109,7 +122,7 @@ _✨ [astrbot](https://github.com/AstrBotDevs/AstrBot) 人工客服插件 ✨_
 
 ## 📦 安装（此为魔改源码，且并没有并入主分支，此安装方式无效）
 
-- 可以直接在astrbot的插件市场搜索astrbot_plugin_human_service，点击安装，耐心等待安装完成即可
+- 可以直接在astrbot的插件市场搜索 `astrbot_plugin_human_service`，点击安装，耐心等待安装完成即可
 - 若是安装失败，可以尝试直接克隆源码：
 
 ```bash
@@ -169,14 +182,21 @@ git clone https://github.com/Zhalslar/astrbot_plugin_human_service
    - 默认：false
    - 说明：开启后，客服可以使用 `/导出记录` 命令导出当前会话的聊天记录
 
-3.1. **共用黑名单** (`share_blacklist`) 
+3.1. **启用活动沉默模式** (`enable_silence_mode`) - v1.7.2新增 ⭐
+   - 类型：布尔值（true/false）
+   - 默认：false
+   - 说明：开启后，机器人的AI对话和其他插件功能将全部停止，仅保留人工客服插件功能
+   - 适用场景：纯人工客服模式、维护期间、防止AI干扰
+   - 效果：用户只能使用人工客服命令，其他消息不会被AI或其他插件处理
+
+3.2. **共用黑名单** (`share_blacklist`) 
    - 类型：布尔值（true/false）
    - 默认：true
    - 说明：多客服模式下，是否共用黑名单
    - 开启：一个客服拉黑用户，所有客服都无法接待该用户
    - 关闭：每个客服有独立的黑名单，互不影响
 
-3.2. **客服消息前缀** (`message_prefix`) 
+3.3. **客服消息前缀** (`message_prefix`) 
    - 类型：字符串
    - 默认：空（不添加前缀）
    - 说明：客服发送给用户的纯文本消息前缀，让对话更加亲切
@@ -185,7 +205,7 @@ git clone https://github.com/Zhalslar/astrbot_plugin_human_service
    - 留空则不添加前缀
    - 注意：答非所问模式启用时，此功能会被答非所问替代
 
-3.2.1. **客服消息后缀** (`message_suffix`) 
+3.3.1. **客服消息后缀** (`message_suffix`) 
    - 类型：字符串
    - 默认：空（不添加后缀）
    - 说明：客服发送给用户的纯文本消息后缀，让对话更加亲切
@@ -195,13 +215,13 @@ git clone https://github.com/Zhalslar/astrbot_plugin_human_service
    - 留空则不添加后缀
    - 注意：答非所问模式启用时，此功能会被答非所问替代
 
-3.3. **启用答非所问模式** (`enable_random_reply`) 
+3.4. **启用答非所问模式** (`enable_random_reply`) 
    - 类型：布尔值（true/false）
    - 默认：false
    - 说明：开启后，客服的纯文本消息会被替换成自定义文字的随机组合
    - 娱乐功能，建议仅用于娱乐场景
 
-3.4. **答非所问自定义文字** (`random_reply_chars`) - v1.8.0新增
+3.5. **答非所问自定义文字** (`random_reply_chars`) - v1.8.0新增
    - 类型：字符串
    - 默认：`"哈基米"`
    - 说明：用于答非所问模式的文字，系统会随机组合这些字
@@ -209,38 +229,38 @@ git clone https://github.com/Zhalslar/astrbot_plugin_human_service
 
 #### 🌍 智能翻译配置（v1.7.0新增）
 
-3.5. **启用智能翻译** (`enable_translation`) 
+3.6. **启用智能翻译** (`enable_translation`) 
    - 类型：布尔值（true/false）
    - 默认：false
    - 说明：开启后，系统会自动翻译客服与用户之间的消息
    - 需要配置OpenAI API Key才能使用
 
-3.6. **主语言** (`translation_main_language`) 
+3.7. **主语言** (`translation_main_language`) 
    - 类型：字符串
    - 默认：`"中文"`
    - 可选值：`"中文"`、`"英文"`、`"日文"`
    - 说明：主要使用的语言。双方都使用主语言时不翻译
 
-3.7. **需翻译语言** (`translation_target_language`) 
+3.8. **需翻译语言** (`translation_target_language`) 
    - 类型：字符串
    - 默认：`"英文"`
    - 可选值：`"中文"`、`"英文"`、`"日文"`
    - 说明：需要翻译的目标语言
 
-3.8. **OpenAI API Key** (`openai_api_key`) 
+3.9. **OpenAI API Key** (`openai_api_key`) 
    - 类型：字符串
    - 默认：空
    - 说明：用于智能翻译的OpenAI API Key
    - 格式：`sk-xxx`
    - 留空则无法使用翻译功能
 
-3.9. **OpenAI API 地址** (`openai_base_url`) 
+3.10. **OpenAI API 地址** (`openai_base_url`) 
    - 类型：字符串
    - 默认：`"https://api.openai.com/v1"`
    - 说明：OpenAI API的基础URL
    - 如使用代理或第三方服务（如one-api），可修改此地址
 
-3.10. **翻译模型** (`openai_model`) 
+3.11. **翻译模型** (`openai_model`) 
    - 类型：字符串
    - 默认：`"gpt-3.5-turbo"`
    - 说明：用于翻译的OpenAI模型
@@ -321,4 +341,4 @@ git clone https://github.com/Zhalslar/astrbot_plugin_human_service
 
 ## 📌 注意事项
 
-- 想第一时间得到反馈的可以来原作者的插件反馈群（QQ群）：460973561/魔改分支找群里的冬月（2143704352）（不点star不给进）
+- 想第一时间得到反馈的可以来作者的插件反馈群（QQ群）：460973561（不点star不给进）
