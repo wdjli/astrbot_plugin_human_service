@@ -1,7 +1,114 @@
 {
     "servicers_id": {
-        "description": "客服QQ",
+        "description": "客服QQ号列表",
         "type": "list",
-        "hint": "若不填则默认从全局配置中加载管理员作为客服"
+        "hint": "填写客服的QQ号，例如：[\"123456789\", \"987654321\"]。若不填则默认从全局配置中加载管理员作为客服"
+    },
+    "servicers_names": {
+        "description": "客服名称列表",
+        "type": "list",
+        "hint": "填写客服的名称，顺序对应servicers_id，例如：[\"客服小王\", \"客服小李\"]。若不填则显示QQ号"
+    },
+    "enable_servicer_selection": {
+        "description": "启用客服选择功能",
+        "type": "bool",
+        "default": true,
+        "hint": "当有多个客服时，是否让用户选择对接哪个客服"
+    },
+    "enable_chat_history": {
+        "description": "启用聊天记录功能",
+        "type": "bool",
+        "default": false,
+        "hint": "开启后，客服可以使用 /导出记录 命令导出当前会话的聊天记录"
+    },
+    "enable_silence_mode": {
+        "description": "启用活动沉默模式",
+        "type": "bool",
+        "default": false,
+        "hint": "开启后，机器人的AI对话和其他插件功能将全部停止，仅保留人工客服插件功能。适用于纯人工客服场景"
+    },
+    "share_blacklist": {
+        "description": "共用黑名单",
+        "type": "bool",
+        "default": true,
+        "hint": "多客服模式下，是否共用黑名单。开启后一个客服拉黑用户，所有客服都无法接待该用户；关闭后每个客服有独立的黑名单"
+    },
+    "message_prefix": {
+        "description": "客服消息前缀",
+        "type": "string",
+        "default": "",
+        "hint": "客服发送给用户的消息前缀。例如设置为\"亲\"，用户收到的消息会变成\"亲你好\"。留空则不添加前缀"
+    },
+    "message_suffix": {
+        "description": "客服消息后缀",
+        "type": "string",
+        "default": "",
+        "hint": "客服发送给用户的消息后缀。例如设置为\"~\"，用户收到的消息会变成\"你好~\"。留空则不添加后缀"
+    },
+    "enable_random_reply": {
+        "description": "启用答非所问模式",
+        "type": "bool",
+        "default": false,
+        "hint": "开启后，客服的消息会被替换成自定义文字的随机组合。娱乐功能，慎用！"
+    },
+    "random_reply_chars": {
+        "description": "答非所问自定义文字",
+        "type": "string",
+        "default": "哈基米",
+        "hint": "用于答非所问模式的文字，系统会随机组合这些字。例如：\"哈基米\"会生成\"哈基\"、\"基米哈\"等随机组合"
+    },
+    "enable_translation": {
+        "description": "启用智能翻译",
+        "type": "bool",
+        "default": false,
+        "hint": "开启后，系统会自动翻译客服与用户之间的消息。需要配置OpenAI API Key"
+    },
+    "translation_main_language": {
+        "description": "主语言",
+        "type": "string",
+        "default": "中文",
+        "hint": "主要使用的语言。选项：中文、英文、日文。双方都是主语言时不翻译"
+    },
+    "translation_target_language": {
+        "description": "需翻译语言",
+        "type": "string",
+        "default": "英文",
+        "hint": "需要翻译的目标语言。选项：中文、英文、日文"
+    },
+    "openai_api_key": {
+        "description": "OpenAI API Key",
+        "type": "string",
+        "default": "",
+        "hint": "用于智能翻译的OpenAI API Key。格式：sk-xxx。留空则无法使用翻译功能"
+    },
+    "openai_base_url": {
+        "description": "OpenAI API 地址",
+        "type": "string",
+        "default": "https://api.openai.com/v1",
+        "hint": "OpenAI API的基础URL。如使用代理或第三方服务，可修改此地址"
+    },
+    "openai_model": {
+        "description": "翻译模型",
+        "type": "string",
+        "default": "gpt-3.5-turbo",
+        "hint": "用于翻译的OpenAI模型。可选：gpt-3.5-turbo、gpt-4、gpt-4-turbo等"
+    },
+    "conversation_timeout": {
+        "description": "对话时间限制（秒）",
+        "type": "int",
+        "default": 0,
+        "hint": "单次对话的最大时长（秒）。设置为0表示不限制。超时后会自动结束对话并接入下一位"
+    },
+    "queue_timeout": {
+        "description": "排队时间限制（秒）",
+        "type": "int",
+        "default": 0,
+        "hint": "用户最大排队等待时长（秒）。设置为0表示不限制。超时后会自动移出队列并通知用户"
+    },
+    "timeout_warning_seconds": {
+        "description": "超时提前提醒（秒）",
+        "type": "int",
+        "default": 120,
+        "hint": "在对话即将超时前多少秒提醒。设置为0表示不提醒。仅在设置了对话时间限制时有效"
     }
 }
