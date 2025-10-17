@@ -4,6 +4,11 @@
         "type": "list",
         "hint": "填写客服的QQ号，例如：[\"123456789\", \"987654321\"]。若不填则默认从全局配置中加载管理员作为客服"
     },
+    "servicers_names": {
+        "description": "客服名称列表",
+        "type": "list",
+        "hint": "填写客服的名称，顺序对应servicers_id，例如：[\"客服小王\", \"客服小李\"]。若不填则显示QQ号"
+    },
     "enable_servicer_selection": {
         "description": "启用客服选择功能",
         "type": "bool",
@@ -15,5 +20,23 @@
         "type": "bool",
         "default": false,
         "hint": "开启后，客服可以使用 /导出记录 命令导出当前会话的聊天记录"
+    },
+    "conversation_timeout": {
+        "description": "对话时间限制（秒）",
+        "type": "int",
+        "default": 0,
+        "hint": "单次对话的最大时长（秒）。设置为0表示不限制。超时后会自动结束对话并接入下一位"
+    },
+    "queue_timeout": {
+        "description": "排队时间限制（秒）",
+        "type": "int",
+        "default": 0,
+        "hint": "用户最大排队等待时长（秒）。设置为0表示不限制。超时后会自动移出队列并通知用户"
+    },
+    "timeout_warning_seconds": {
+        "description": "超时提前提醒（秒）",
+        "type": "int",
+        "default": 120,
+        "hint": "在对话即将超时前多少秒提醒。设置为0表示不提醒。仅在设置了对话时间限制时有效"
     }
 }
